@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accordion Race Form</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: url('/accordion/bg.png') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            padding: 20px 40px;
+            border-radius: 10px;
+            text-align: left;
+            width: 400px;
+            position: relative;
+            left: 30px;
+        }
+
+        .container h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 10px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 5px;
+            background: url('/accordion/input.png') no-repeat center;
+            background-size: cover;
+            color: white;
+            outline: none;
+        }
+
+        .input-group .gender {
+            margin-left: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .gender input {
+            display: none;
+        }
+
+        .gender label {
+            width: 40px;
+            height: 40px;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .gender label[for="male1"],
+        .gender label[for="male2"], 
+        .gender label[for="male3"] {
+            background: url('/accordion/male.png') no-repeat center;
+            background-size: cover;
+        }
+
+        .gender label[for="female1"],
+        .gender label[for="female2"], 
+        .gender label[for="female3"] {
+            background: url('/accordion/female.png') no-repeat center;
+            background-size: cover;
+        }
+
+        .gender input:checked + label[for="male1"],
+        .gender input:checked + label[for="male2"],
+        .gender input:checked + label[for="male3"] {
+            background: url('/accordion/highlightedMale.png') no-repeat center;
+            background-size: cover;
+        }
+
+        .gender input:checked + label[for="female1"],
+        .gender input:checked + label[for="female2"],
+        .gender input:checked + label[for="female3"] {
+            background: url('/accordion/highlightedFemale.png') no-repeat center;
+            background-size: cover;
+        }
+
+        .start-button {
+            background: #EDFA86;
+            color: black;
+            font-size: 2rem;
+            padding: 10px 40px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .start-button:hover {
+            background: #a5dd00;
+        }
+        #secondPage h3{
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        #secondPage .restart-button{
+            background: #c93f0d;
+            color: white;
+            font-size: 2rem;
+            padding: 10px 40px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="firstPage" style="display: block">
+            <h1>Enter Player Info</h1>
+            <form id="playerForm">
+                <div class="input-group">
+                    <input type="text" id="player1" placeholder="Player one" required>
+                    <div class="gender">
+                        <input type="radio" id="male1" name="gender1" value="male">
+                        <label for="male1"></label>
+                        <input type="radio" id="female1" name="gender1" value="female">
+                        <label for="female1"></label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="player2" placeholder="Player two" required>
+                    <div class="gender">
+                        <input type="radio" id="male2" name="gender2" value="male">
+                        <label for="male2"></label>
+                        <input type="radio" id="female2" name="gender2" value="female">
+                        <label for="female2"></label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="player3" placeholder="Player three" required>
+                    <div class="gender">
+                        <input type="radio" id="male3" name="gender3" value="male">
+                        <label for="male3"></label>
+                        <input type="radio" id="female3" name="gender3" value="female">
+                        <label for="female3"></label>
+                    </div>
+                </div>
+                <button type="button" class="start-button" id="startButton">Start race</button>
+            </form>
+        </div>
+        <div id="secondPage" style="display: none; text-align: center;">
+            <h3>Experience is on the way</h3>
+            <button class="restart-button" onclick="location.reload()">Restart</button>
+        </div>
+    </div>
+    <script src="/node_modules/socket.io/client-dist/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        document.getElementById("startButton").addEventListener("click", () => {
+            const players = [];
+            for (let i = 1; i <= 3; i++) {
+                const playerName = document.getElementById(`player${i}`).value.trim();
+                if (!playerName) {
+                    alert(`Player ${i} name is required`);
+                    return;
+                }
+
+                const genderInputs = document.querySelectorAll(`input[name="gender${i}"]`);
+                let selectedGender = "male"; // Default to male
+
+                genderInputs.forEach((input) => {
+                    if (input.checked) {
+                        selectedGender = input.value;
+                    }
+                });
+
+                players.push({ name: playerName, gender: selectedGender });
+            }
+
+            // Emit player data to the server
+            socket.emit("playerData", players);
+
+            // Show the second page
+            document.getElementById("firstPage").style.display = "none";
+            document.getElementById("secondPage").style.display = "block";
+        });
+        // Restart button click event
+        document.querySelector('.restart-button').addEventListener('click', () => {
+            socket.emit("gameRestart", { gameRestart: true });
+            location.reload(); // Reload the page to restart
+        });
+
+        // Reload page when receiving restart signal from the server
+        socket.on("restartApp", () => {
+            location.reload();
+        });
+
+
+
+        // Function to toggle fullscreen mode
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+        document.querySelectorAll('input[type="text"]').forEach(input => {
+            input.addEventListener('focus', () => {
+                // Re-enable fullscreen when the input is focused
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                }
+            });
+
+            input.addEventListener('blur', () => {
+                // Optionally exit fullscreen when input loses focus
+                // document.exitFullscreen();
+            });
+        });
+
+        // Function to check fullscreen mode and keep it on reload
+        function enableFullscreenIfNeeded() {
+            const isFullscreen = localStorage.getItem('isFullscreen') === 'true';
+            if (isFullscreen && !document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable fullscreen mode after reload: ${err.message}`);
+                });
+            }
+        }
+
+        // Listen for double-click to toggle fullscreen mode
+        document.addEventListener('dblclick', () => {
+            toggleFullScreen();
+            // localStorage.setItem('isFullscreen', document.fullscreenElement ? 'true' : 'false');
+        });
+
+        // Listen for double-tap on mobile to toggle fullscreen mode
+        let lastTouch = 0;
+        document.addEventListener('touchstart', (event) => {
+            const currentTime = new Date().getTime();
+            const timeSinceLastTouch = currentTime - lastTouch;
+
+            if (timeSinceLastTouch < 500 && timeSinceLastTouch > 0) {
+                toggleFullScreen();
+                localStorage.setItem('isFullscreen', document.fullscreenElement ? 'true' : 'false');
+                event.preventDefault(); // Prevent zooming on double-tap
+            }
+
+            lastTouch = currentTime;
+        });
+
+        // Restore fullscreen on page load if needed
+        window.addEventListener('load', enableFullscreenIfNeeded);
+    </script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Form</title>
+    <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/node_modules/bootstrap-icons/font/bootstrap-icons.css">
+    <style>
+
+@font-face {
+    font-family: "EYFont";
+    src: url("/fonts/EYINTERSTATE-REGULAR.ttf") format("truetype");
+}
+body {
+    background: url('/heart-27th/images/IpadScreen.png') no-repeat center center fixed;
+    background-size: cover;
+    font-family: "EYFont", sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100vh;
+    color: white;
+}
+.form-container {
+    padding: 0;
+    border-radius: 10px;
+    width: 67%;
+    margin-top: 15px;
+}
+.form-container h1{
+    color: red;
+    font-size: 46px;
+    font-weight: bold;
+}
+.start-button-container {
+    margin-top: 20px;
+}
+.start-button {
+    background-color: #ffdd57;
+    color: black;
+    padding: 15px;
+    width: 100%;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    text-align: center;
+}
+input[type="text"] {
+    padding: 18px;
+    border-radius: 5px;
+    border: none;
+}
+.gender-buttons button.male {
+    background-color: #00bfff;
+    font-weight: 900;
+}
+.gender-buttons button.female {
+    background-color: #ff69b4;
+    font-weight: 900;
+}
+
+/* Second Page */
+.center-block {
+    margin-left: 173px;
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+
+
+.restart-button {
+    margin-top: 20px;
+    display: inline-block;
+    padding: 10px;
+    background-color: red;
+}
+
+@media (max-width: 768px) and (min-width: 768px) {
+    /* iPad (5th generation) */
+    #secondPage {
+        background-size: contain; /* Ensure the image scales without cutting */
+        background-attachment: fixed; /* Make the background stay fixed during scroll */
+    }
+
+    .form-container {
+        padding: 20px;
+    }
+
+    .center-block {
+        width: 70%;
+        font-size: 1.5rem;
+    }
+
+    .restart-button {
+        padding: 8px 16px;
+        font-size: 1.2rem;
+    }
+
+}
+
+
+.container{
+    position: absolute;
+    top: 62%;
+    left: 20%;
+
+}
+
+
+    </style>
+</head>
+<body>
+    <div class="container" id="firstPage">
+        <div class="row">
+            <div class="">
+                <div class="form-container">
+                    <h1>Enter Player Names</h1>
+                    <!-- Player 1 Section -->
+                    <div class="">
+                        <label class="col-form-label" for="player1">Player 1</label>
+                        <div class="">
+                            <input type="text" id="player1" class="form-control me-2" placeholder="Enter name here">
+                            <div id="player1Error" class="text-danger" style="display: none; font-weight: bold;">Player 1 name is mandatory.</div> <!-- Error message -->
+                        </div>
+                    </div>
+
+                    <!-- Player 2 Section -->
+                    <div class="row mb-3">
+                        <label class="col-form-label" for="player2">Player 2</label>
+                        <div class="col-12 d-flex">
+                            <input type="text" id="player2" class="form-control me-2" placeholder="Enter name here">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Start Race Button -->
+            <div class="col-md-6 offset-md-1">
+                <div class="start-button-container">
+                    <button class="start-button">Start Race</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Page -->
+    <div id="secondPage" style="display: none;">
+        <div class="center-block">
+            <h1>Experience is on the way</h1>
+            <button class="btn btn-primary restart-button">Restart</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/node_modules/socket.io/client-dist/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        // Enforce name length limit (max 12 characters)
+        document.querySelectorAll('input[id^="player"]').forEach(input => {
+            input.addEventListener('input', function () {
+                if (this.value.length > 12) {
+                    this.value = this.value.substring(0, 12);
+                }
+            });
+        });
+
+        // Gather and submit player data to the server
+        function submitPlayerData() {
+            const player1Name = document.getElementById('player1').value;
+            const player2Name = document.getElementById('player2').value;
+            const player1Error = document.getElementById('player1Error'); // Get the error message element
+
+            // Check if Player 1 name is provided
+            if (!player1Name) {
+                player1Error.style.display = 'block'; // Show error message
+                return; // Exit the function if validation fails
+            } else {
+                player1Error.style.display = 'none'; // Hide error message if validation passes
+            }
+
+            // Emit the event with player names
+            socket.emit('playerdata', {
+                player1: player1Name,
+                player2: player2Name
+            });
+
+            socket.emit('gameStart', { gameStart: true });
+
+            // Switch to second page
+            document.getElementById('firstPage').style.display = 'none';
+            document.getElementById('secondPage').style.display = 'flex';
+        }
+
+        // Add gender button functionality
+        document.querySelectorAll('.gender-buttons button').forEach(button => {
+            button.addEventListener('click', () => {
+                button.parentElement.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+            });
+        });
+
+        // Start Race button click event
+        document.querySelector('.start-button').addEventListener('click', submitPlayerData);
+
+        // Restart button click event
+        document.querySelector('.restart-button').addEventListener('click', () => {
+            socket.emit('gameRestart', { gameRestart: true });
+            // location.reload(); // Reload the page to restart
+
+            // Hide the second page and show the first page
+            document.getElementById('secondPage').style.display = 'none'; // Hide the second page
+            document.getElementById('firstPage').style.display = 'block'; // Show the first page
+            clearInputFields(); // Clear the input fields
+        });
+
+        // Reload page when receiving restart signal from the server
+        socket.on('restartApp', () => {
+            // location.reload();
+
+            // Hide the second page and show the first page
+            document.getElementById('secondPage').style.display = 'none'; // Hide the second page
+            document.getElementById('firstPage').style.display = 'block'; // Show the first page
+            clearInputFields(); // Clear the input fields
+        });
+
+        function clearInputFields() {
+            document.getElementById('player1').value = ''; // Clear Player 1 input
+            document.getElementById('player2').value = ''; // Clear Player 2 input
+        }
+
+
+        // Function to toggle fullscreen mode
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    // Handle the error
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Function to check fullscreen mode and keep it on reload
+        function enableFullscreenIfNeeded() {
+            const isFullscreen = localStorage.getItem('isFullscreen') === 'true';
+            if (isFullscreen && !document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable fullscreen mode after reload: ${err.message}`);
+                });
+            }
+        }
+
+        // Listen for double-click to toggle fullscreen mode
+        document.addEventListener('dblclick', () => {
+            toggleFullScreen();
+            localStorage.setItem('isFullscreen', document.fullscreenElement ? 'true' : 'false');
+        });
+
+        // Listen for double-tap on mobile to toggle fullscreen mode
+        let lastTouch = 0;
+        document.addEventListener('touchstart', (event) => {
+            const currentTime = new Date().getTime();
+            const timeSinceLastTouch = currentTime - lastTouch;
+
+            if (timeSinceLastTouch < 500 && timeSinceLastTouch > 0) {
+                toggleFullScreen();
+                localStorage.setItem('isFullscreen', document.fullscreenElement ? 'true' : 'false');
+                event.preventDefault(); // Prevent zooming on double-tap
+            }
+
+            lastTouch = currentTime;
+        });
+
+        // Restore fullscreen on page load if needed
+        window.addEventListener('load', enableFullscreenIfNeeded);
+
+    </script>
+</body>
+</html>

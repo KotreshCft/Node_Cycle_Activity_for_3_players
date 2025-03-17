@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -270,6 +270,192 @@
 
         // Restore fullscreen on page load if needed
         window.addEventListener('load', enableFullscreenIfNeeded);
+    </script>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accordion Race Form</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: url('/accordion/bg.png') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            padding: 20px 40px;
+            border-radius: 10px;
+            text-align: left;
+            width: 400px;
+            position: relative;
+            left: 30px;
+        }
+
+        .container h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 10px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 5px;
+            background: url('/accordion/input.png') no-repeat center;
+            background-size: cover;
+            color: white;
+            outline: none;
+        }
+
+        .input-group .gender {
+            margin-left: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .gender input {
+            display: none;
+        }
+
+        .gender label {
+            width: 40px;
+            height: 40px;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .gender label[for^="male"],
+        .gender label[for^="female"] {
+            background-size: cover;
+            background-position: center;
+        }
+
+        .gender label[for^="male"] {
+            background-image: url('/accordion/male.png');
+        }
+
+        .gender label[for^="female"] {
+            background-image: url('/accordion/female.png');
+        }
+
+        .gender input:checked + label[for^="male"] {
+            background-image: url('/accordion/highlightedMale.png');
+        }
+
+        .gender input:checked + label[for^="female"] {
+            background-image: url('/accordion/highlightedFemale.png');
+        }
+
+        .start-button {
+            background: #EDFA86;
+            color: black;
+            font-size: 2rem;
+            padding: 10px 40px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .start-button:hover {
+            background: #a5dd00;
+        }
+
+        #secondPage h3 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        #secondPage .restart-button {
+            background: #c93f0d;
+            color: white;
+            font-size: 2rem;
+            padding: 10px 40px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="firstPage" style="display: block">
+            <h1>Enter Player Info</h1>
+            <form id="playerForm">
+                <script>
+                    for (let i = 1; i <= 4; i++) {
+                        document.write(`
+                            <div class="input-group">
+                                <input type="text" id="player${i}" placeholder="Player ${i}" required>
+                                <div class="gender">
+                                    <input type="radio" id="male${i}" name="gender${i}" value="male">
+                                    <label for="male${i}"></label>
+                                    <input type="radio" id="female${i}" name="gender${i}" value="female">
+                                    <label for="female${i}"></label>
+                                </div>
+                            </div>
+                        `);
+                    }
+                </script>
+                <button type="button" class="start-button" id="startButton">Start race</button>
+            </form>
+        </div>
+        <div id="secondPage" style="display: none; text-align: center;">
+            <h3>Experience is on the way</h3>
+            <button class="restart-button" onclick="location.reload()">Restart</button>
+        </div>
+    </div>
+    <script src="/node_modules/socket.io/client-dist/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        document.getElementById("startButton").addEventListener("click", () => {
+            const players = [];
+            for (let i = 1; i <= 4; i++) {
+                const playerName = document.getElementById(`player${i}`).value.trim();
+                if (!playerName) {
+                    alert(`Player ${i} name is required`);
+                    return;
+                }
+
+                const genderInputs = document.querySelectorAll(`input[name="gender${i}"]`);
+                let selectedGender = "male"; // Default to male
+
+                genderInputs.forEach((input) => {
+                    if (input.checked) {
+                        selectedGender = input.value;
+                    }
+                });
+
+                players.push({ name: playerName, gender: selectedGender });
+            }
+
+            socket.emit("playerData", players);
+            document.getElementById("firstPage").style.display = "none";
+            document.getElementById("secondPage").style.display = "block";
+        });
     </script>
 </body>
 </html>
